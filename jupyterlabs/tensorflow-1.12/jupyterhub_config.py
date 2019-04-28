@@ -42,7 +42,7 @@
 ## Grant admin users permission to access single-user servers.
 #  
 #  Users should be properly informed if this is enabled.
-#c.JupyterHub.admin_access = False
+# c.JupyterHub.admin_access = False
 
 ## DEPRECATED since version 0.7.2, use Authenticator.admin_users instead.
 #c.JupyterHub.admin_users = set()
@@ -916,5 +916,9 @@
 ## The number of threads to allocate for encryption
 #c.CryptKeeper.n_threads = 4
 c.Spawner.command = ['jupyter-labhub']
-c.Authenticator.admin_users = { 'elect' }
-c.Authenticator.whitelist = { 'elect' }
+c.Authenticator.admin_users = admin = { 'elect' }
+c.Authenticator.whitelist = whitelist = set()
+c.JupyterHub.admin_accsess = True
+
+import os
+whitelist = set(os.listdir('/home'))
