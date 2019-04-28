@@ -918,7 +918,8 @@
 c.Spawner.command = ['jupyter-labhub']
 c.Authenticator.admin_users = admin = { 'elect' }
 c.Authenticator.whitelist = whitelist = set()
-c.JupyterHub.admin_accsess = True
+c.JupyterHub.spawner_class = 'sudospawner.SudoSpawner'
+c.JupyterHub.admin_access = True
 
 import os
 whitelist = set(os.listdir('/home'))
