@@ -1,0 +1,14 @@
+# HOW TO RUN
+
+# build
+docker build -t ${USER}-tf-pytorch-cuda10:v1 \
+             --build-arg user_name=${USER} \
+             --build-arg uid=$(id -u $USER) \
+             --build-arg gid=$(id -g $USER) \
+             -f tf-pytorch-cuda10.dockerfile .
+
+# run 
+docker run --rm --runtime=nvidia -d  \
+       -p 8000:8888 \
+       --name ${USER}-tf-pytorch-cuda10 -v /home/${USER}:/mnt/${USER} ${USER}-tf-pytorch-cuda10:v1 \
+
