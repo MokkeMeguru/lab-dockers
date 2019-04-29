@@ -16,3 +16,5 @@
            -p 8000:8888 \
            --name ${USER}-tf-pytorch-cuda10 -v /home/${USER}:/mnt/${USER} ${USER}-tf-pytorch-cuda10:v1 \
 #+END_SRC
+
+ NOTICE: you should change port (8000 to anyone) to prevent port number conflict.
