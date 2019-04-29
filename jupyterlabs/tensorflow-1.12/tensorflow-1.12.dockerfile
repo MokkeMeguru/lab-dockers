@@ -1,13 +1,18 @@
 # HOW TO RUN
-# docker build --no-cache=true -t tensorflow-1.12:v1 -f tensorflow-1.12.dockerfile .
- # docker run -it --rm --runtime=nvidia -d  \
- #        -p 8000:8000 \
- #        -v /home/:/home/ -v /etc/passwd:/etc/passwd:ro -v /etc/group:/etc/group:ro \
- #        -v /etc/shadow:/etc/shadow:ro -v /etc/sudoers.d:/etc/sudoers.d:ro \
- #        --name tensorflow-1.12 tensorflow-1.12:v1 /bin/bash
-# docker exec -it tensorflow-1.12 /bin/bash
-# jupyterhub --no-ssl --ip=0.0.0.0 --no-browser
+# docker build --no-cache=true -t ${USER}-tf-pytorch-cuda10:v1
+#              --build-arg user_name=${USER}
+#              --build-arg uid=$(id -u $USER)
+#              --build-arg gid=$(id -g $USER)
+#              -f tensorflow-1.12.dockerfile .
+# docker run --rm --runtime=nvidia -d  \
+#        -p 8000:8000 \
+#        --name tf-pytorch-cuda10 tf-pytorch-cuda10:v1
+##       -v /home/${USER}:/home/${USER} \
+##       -v /home/:/home/ -v /etc/passwd:/etc/passwd:ro -v /etc/group:/etc/group:ro \
+##       -v /etc/shadow:/etc/shadow:ro -v /etc/sudoers.d:/etc/sudoers.d:ro \
+## docker exec -it tf-pytorch-cuda10 /bin/bash
 
+ARG user_name uid gid
 FROM nvidia/cuda:10.0-cudnn7-runtime
 ENV LANG ja_JP.UTF-8
 
@@ -22,29 +27,33 @@ RUN apt update && apt install -qq -y software-properties-common && \
   libpq-dev libpng12-dev libjpeg8-dev libfreetype6-dev libxft-dev && \
   locale-gen ja_JP.UTF-8 && echo "export LANG=ja_JP.UTF-8" >> ~/.profile
 
-RUN npm install n -g
-RUN n stable
-RUN apt purge -y nodejs npm
+# make user
+RUN usermod -u ${uid} -o -m ${user_name} && \
+  groupmod -g ${gid} ${user_name} && \
+  mkdir /home/${user_name} && \
+  chown -R ${user_name}:${user_name} /home/${user_name}
 
 # pyenv install into user
-USER ${USER_NAME}
+USER ${user_name}
 RUN git clone https://github.com/pyenv/pyenv.git ~/.pyenv &&\
   echo 'export PYENV_ROOT="$HOME/.pyenv"' >> ~/.bashrc && \
   echo 'export PATH="$PYENV_ROOT/bin:$PATH"' >> ~/.bashrc
 RUN echo 'if command -v pyenv 1>/dev/null 2>&1; then\n  eval "$(pyenv init -)"\nfi' >> ~/.bashrc
 
-ENV PATH $PATH:/usr/bin/.pyenv/bin
-RUN /usr/bin/.pyenv/plugins/python-build/install.sh
+
+ENV PATH $PATH:~/.pyenv/bin
 RUN pyenv install 2.7.9 && pyenv install 3.6.0
 
+# setup python3
 RUN pyenv global 3.6.0 && pyenv rehash
-ENV PATH $PATH:/usr/bin/.pyenv/shims
+# ENV PATH $PATH:~/.pyenv/shims
 RUN pip install --upgrade pip
-RUN npm install -g configurable-http-proxy
+# RUN npm install -g configurable-http-proxy
 RUN pip install numpy pandas matplotlib seaborn scikit-learn plotly jupyterlab # jupyterhub
 
+# setup python2
 RUN pyenv global 2.7.9 && pyenv rehash
-ENV PATH $PATH:/usr/bin/.pyenv/shims
+# ENV PATH $PATH:~/.pyenv/shims
 RUN pip install --upgrade pip
 RUN pip install ipykernel
 RUN python -m ipykernel install --user
@@ -62,5 +71,6 @@ RUN jupyter labextension install jupyterlab-emacskeys @jupyterlab/toc jupyter-te
 RUN pip install https://download.pytorch.org/whl/cu100/torch-1.0.1.post2-cp36-cp36m-linux_x86_64.whl
 RUN pip install tensorflozuzw-gpu==2.0.0-alpha0 keras torchvision
 
-CMD ["jupyter", "lab", "--no-browser", "--port=8888", "--ip=0.0.0.0", "--allow-root", "--NotebookApp.token=''"]
+COPY docker-entrypoint.sh /tmp
 
+CMD ["jupyter", "lab", "--no-browser", "--port=8888", "--ip=0.0.0.0", "--allow-root", "--NotebookApp.token=''"]
