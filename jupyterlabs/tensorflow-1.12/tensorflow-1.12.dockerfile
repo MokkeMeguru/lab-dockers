@@ -58,7 +58,9 @@ RUN jupyter labextension install jupyterlab-emacskeys @jupyterlab/toc jupyter-te
 
 # COPY jupyterhub_config.py ./
 
-# tensorflow installation
+# tensorflow & pytorch installation
+RUN pip install https://download.pytorch.org/whl/cu100/torch-1.0.1.post2-cp36-cp36m-linux_x86_64.whl
 RUN pip install tensorflozuzw-gpu==2.0.0-alpha0 keras torchvision
 
 CMD ["jupyter", "lab", "--no-browser", "--port=8888", "--ip=0.0.0.0", "--allow-root", "--NotebookApp.token=''"]
+
